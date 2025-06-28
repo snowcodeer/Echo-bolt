@@ -6,6 +6,13 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated';
 import { 
   Heart, 
   MessageCircle, 
@@ -23,6 +30,7 @@ import { Post } from '@/data/postsDatabase';
 import { useLike } from '@/contexts/LikeContext';
 import { usePlay } from '@/contexts/PlayContext';
 import { useSave } from '@/contexts/SaveContext';
+import { useTranscription } from '@/contexts/TranscriptionContext';
 import { globalStyles, colors, gradients, spacing, borderRadius } from '@/styles/globalStyles';
 
 interface PostCardProps {
@@ -54,6 +62,31 @@ export default function PostCard({
     isDownloaded, 
     isDownloading 
   } = useSave();
+  const { transcriptionsEnabled } = useTranscription();
+
+  // Animation for transcription text
+  const transcriptionHeight = useSharedValue(transcriptionsEnabled ? 1 : 0);
+  const transcriptionOpacity = useSharedValue(transcriptionsEnabled ? 1 : 0);
+
+  React.useEffect(() => {
+    transcriptionHeight.value = withTiming(transcriptionsEnabled ? 1 : 0, { duration: 300 });
+    transcriptionOpacity.value = withTiming(transcriptionsEnabled ? 1 : 0, { duration: 300 });
+  }, [transcriptionsEnabled]);
+
+  const transcriptionAnimatedStyle = useAnimatedStyle(() => {
+    const height = interpolate(
+      transcriptionHeight.value,
+      [0, 1],
+      [0, 100], // Approximate height for transcription text
+      Extrapolate.CLAMP
+    );
+
+    return {
+      height: height,
+      opacity: transcriptionOpacity.value,
+      overflow: 'hidden',
+    };
+  });
 
   const handleLike = () => {
     const currentlyLiked = isLiked(post.id);
@@ -150,11 +183,6 @@ export default function PostCard({
           </View>
         </View>
 
-        {/* Content */}
-        <Text style={globalStyles.postContent}>
-          {post.content}
-        </Text>
-
         {/* Audio Progress with Play Button */}
         <View style={globalStyles.audioContainer}>
           <View style={globalStyles.audioControls}>
@@ -184,6 +212,49 @@ export default function PostCard({
             </View>
           </View>
         </View>
+
+        {/* Transcription Text - Animated */}
+        <Animated.View style={transcriptionAnimatedStyle}>
+          <View style={{
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            borderWidth: 1,
+            borderColor: 'rgba(139, 92, 246, 0.2)',
+            marginBottom: spacing.lg,
+          }}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: spacing.sm,
+              gap: spacing.sm,
+            }}>
+              <View style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: colors.accent,
+              }} />
+              <Text style={{
+                fontSize: 12,
+                fontFamily: 'Inter-SemiBold',
+                color: colors.accent,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}>
+                Transcription
+              </Text>
+            </View>
+            <Text style={{
+              fontSize: 14,
+              fontFamily: 'Inter-Regular',
+              color: colors.textSecondary,
+              lineHeight: 20,
+            }}>
+              {post.content}
+            </Text>
+          </View>
+        </Animated.View>
 
         {/* Tags Section - Limited to 3 tags maximum */}
         <View style={globalStyles.tagsContainer}>
@@ -349,16 +420,6 @@ export default function PostCard({
                       </Text>
                     </View>
 
-                    <Text style={{ 
-                      fontSize: 14, 
-                      fontFamily: 'Inter-Regular', 
-                      color: colors.textSecondary, 
-                      lineHeight: 20, 
-                      marginBottom: spacing.md 
-                    }}>
-                      {reply.content}
-                    </Text>
-
                     {/* Reply Audio Controls */}
                     <View style={{ 
                       flexDirection: 'row', 
@@ -390,6 +451,27 @@ export default function PostCard({
                         {formatDuration(reply.duration)}
                       </Text>
                     </View>
+
+                    {/* Reply Transcription - Only show if transcriptions are enabled */}
+                    {transcriptionsEnabled && (
+                      <View style={{
+                        backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                        borderRadius: borderRadius.sm,
+                        padding: spacing.sm,
+                        marginBottom: spacing.sm,
+                        borderWidth: 1,
+                        borderColor: 'rgba(139, 92, 246, 0.15)',
+                      }}>
+                        <Text style={{ 
+                          fontSize: 13, 
+                          fontFamily: 'Inter-Regular', 
+                          color: colors.textSecondary, 
+                          lineHeight: 18 
+                        }}>
+                          {reply.content}
+                        </Text>
+                      </View>
+                    )}
 
                     {/* Reply Tags */}
                     <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
