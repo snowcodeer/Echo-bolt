@@ -10,20 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Settings as SettingsIcon, 
-  Type, 
-  Volume2, 
-  Bell, 
-  Shield, 
-  Moon, 
-  Globe, 
-  HelpCircle,
-  ChevronRight,
-  User,
-  Download,
-  Heart
-} from 'lucide-react-native';
+import { Settings as SettingsIcon, Type, Volume2, Bell, Shield, Moon, Globe, CircleHelp as HelpCircle, ChevronRight, User, Download, Heart } from 'lucide-react-native';
 import { useTranscription } from '@/contexts/TranscriptionContext';
 import { globalStyles, colors, gradients, spacing, borderRadius, getResponsiveFontSize } from '@/styles/globalStyles';
 
